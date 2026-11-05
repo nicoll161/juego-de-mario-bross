@@ -1,1 +1,181 @@
-file:///C:/Users/ESTUDIANTE.DESKTOP-FSNHA8C/Documents/juego%20de%20dinosaurio/index.html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Juego Pong</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: #1a1a1a;
+      color: #ffffff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    .instrucciones {
+      margin-bottom: 15px;
+      color: #aaa;
+    }
+
+    #marcador {
+      font-size: 2rem;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+
+    canvas {
+      background-color: #000000;
+      border: 4px solid #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Pong Arcade</h1>
+  <p class="instrucciones">Mueve el ratón / cursor hacia arriba y abajo para controlar la raqueta izquierda.</p>
+  <div id="marcador">Jugador: <span id="puntos-jugador">0</span> | IA: <span id="puntos-ia">0</span></div>
+
+  <canvas id="gameCanvas" width="800" height="400"></canvas>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const elemJugador = document.getElementById("puntos-jugador");
+    const elemIa = document.getElementById("puntos-ia");
+
+    let puntosJugador = 0;
+    let puntosIa = 0;
+
+    const jugador = {
+      x: 20,
+      y: canvas.height / 2 - 50,
+      ancho: 12,
+      alto: 100,
+      color: "#00ffcc"
+    };
+
+    const ia = {
+      x: canvas.width - 32,
+      y: canvas.height / 2 - 50,
+      ancho: 12,
+      alto: 100,
+      color: "#ff0055",
+      velocidad: 4.5
+    };
+
+    const pelota = {
+      x: canvas.width / 2,
+      y: canvas.height / 2,
+      radio: 8,
+      velocidadX: 5,
+      velocidadY: 5,
+      color: "#ffffff"
+    };
+
+    canvas.addEventListener("mousemove", (e) => {
+      const rect = canvas.getBoundingClientRect();
+      jugador.y = e.clientY - rect.top - jugador.alto / 2;
+    });
+
+    function reiniciarPelota() {
+      pelota.x = canvas.width / 2;
+      pelota.y = canvas.height / 2;
+      pelota.velocidadX = -pelota.velocidadX;
+      pelota.velocidadY = 4 * (Math.random() > 0.5 ? 1 : -1);
+    }
+
+    function actualizar() {
+      pelota.x += pelota.velocidadX;
+      pelota.y += pelota.velocidadY;
+
+      if (pelota.y - pelota.radio < 0 || pelota.y + pelota.radio > canvas.height) {
+        pelota.velocidadY = -pelota.velocidadY;
+      }
+
+      const centroIa = ia.y + ia.alto / 2;
+      if (centroIa < pelota.y - 15) {
+        ia.y += ia.velocidad;
+      } else if (centroIa > pelota.y + 15) {
+        ia.y -= ia.velocidad;
+      }
+
+      if (
+        pelota.x - pelota.radio < jugador.x + jugador.ancho &&
+        pelota.y > jugador.y &&
+        pelota.y < jugador.y + jugador.alto
+      ) {
+        pelota.velocidadX = -pelota.velocidadX * 1.05;
+      }
+
+      if (
+        pelota.x + pelota.radio > ia.x &&
+        pelota.y > ia.y &&
+        pelota.y < ia.y + ia.alto
+      ) {
+        pelota.velocidadX = -pelota.velocidadX * 1.05;
+      }
+
+      if (pelota.x - pelota.radio < 0) {
+        puntosIa++;
+        elemIa.textContent = puntosIa;
+        reiniciarPelota();
+      }
+
+      if (pelota.x + pelota.radio > canvas.width) {
+        puntosJugador++;
+        elemJugador.textContent = puntosJugador;
+        reiniciarPelota();
+      }
+    }
+
+    function dibujar() {
+      ctx.fillStyle = "#000000";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.strokeStyle = "#333333";
+      ctx.setLineDash([10, 10]);
+      ctx.beginPath();
+      ctx.moveTo(canvas.width / 2, 0);
+      ctx.lineTo(canvas.width / 2, canvas.height);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = jugador.color;
+      ctx.fillRect(jugador.x, jugador.y, jugador.ancho, jugador.alto);
+
+      ctx.fillStyle = ia.color;
+      ctx.fillRect(ia.x, ia.y, ia.ancho, ia.alto);
+
+      ctx.fillStyle = pelota.color;
+      ctx.beginPath();
+      ctx.arc(pelota.x, pelota.y, pelota.radio, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function bucleJuego() {
+      actualizar();
+      dibujar();
+      requestAnimationFrame(bucleJuego);
+    }
+
+    bucleJuego();
+  </script>
+</body>
+</html>
